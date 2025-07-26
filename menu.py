@@ -3,6 +3,12 @@ from time import sleep
 
 from crud import ler_todos_usuarios
 
+st.set_page_config(
+  layout="wide",
+  page_icon="🎆",
+  page_title="RH MAX"
+)
+
 def login():
   with st.container(border=True):
     st.markdown('Bem-vindo ao RH Max!')

@@ -86,9 +86,6 @@ def deleta_usuario(id):
       session.delete(usuario[0])
     session.commit()
 
-   
-  
-    
 
 if __name__ == '__main__':
   cria_usuarios(
