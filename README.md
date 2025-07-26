@@ -9,3 +9,5 @@
 3. deactivate para desativar
 
 4. pip install -r .\requirements.txt
+
+5. streamlit run .\menu.py

@@ -2,6 +2,8 @@ from pathlib import Path
 from sqlalchemy import create_engine, String, Boolean, Integer, select, ForeignKey
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, Session, relationship
 
+from werkzeug.security import generate_password_hash, check_password_hash
+
 pasta_atual = Path(__file__).parent
 
 PATH_TO_BD = pasta_atual/'bd_usuarios.sqlite'
@@ -14,12 +16,18 @@ class Usuario(Base):
 
   id: Mapped[int] = mapped_column(primary_key=True)
   nome: Mapped[str] = mapped_column(String(30))
-  senha: Mapped[str] = mapped_column(String(30))
+  senha: Mapped[str] = mapped_column(String(128))
   email: Mapped[str] = mapped_column(String(30))
   acesso_gestor: Mapped[bool] = mapped_column(Boolean(), default=False)
 
   def __repr__(self):
     return f"Usuario({self.id=}, {self.nome=})"
+
+  def define_senha(self, senha):
+    self.senha = generate_password_hash(senha)
+
+  def verifica_senha(self, senha):
+    return check_password_hash(self.senha, senha)
 
 engine = create_engine(f'sqlite:///{PATH_TO_BD}')
 Base.metadata.create_all(bind=engine)
@@ -34,10 +42,10 @@ def cria_usuarios(
       with Session(bind=engine) as session:
           usuario = Usuario(
               nome=nome,
-              senha=senha,
               email=email,
               **kwargs
           )
+          usuario.define_senha(senha)
           session.add(usuario)
           session.commit()
 
@@ -64,8 +72,10 @@ def modifica_usuario(
     usuarios = session.execute(comando_sql).fetchall()
     for usuario in usuarios:
       for key, value in kwargs.items():
-        setattr(usuario[0], key, value)
-        
+        if key == 'senha':
+          usuario[0].define_senha(value)
+        else:
+          setattr(usuario[0], key, value)
     session.commit()
 
 def deleta_usuario(id):
@@ -78,31 +88,18 @@ def deleta_usuario(id):
 
    
   
-     
     
 
 if __name__ == '__main__':
-    # cria_usuarios(
-    #   'Leo Bakerly',
-    #   senha='123',
-    #   email='leo@gmail.com',
-    #   acesso_gestor=True
-    #   )
-
-    # usuarios = ler_todos_usuarios()
-    # usuario_0 = usuarios[0]
-    # print(usuario_0)
-    # print(usuario_0.nome)
-    # print(usuario_0.senha)
-    # print(usuario_0.email)
-
-    # usuario_gustavo = ler_usuario_id(id=1)
-    # print(usuario_gustavo)
-    # print(usuario_gustavo.nome, usuario_gustavo.senha, usuario_gustavo.email)
-
-    # modifica_usuario(id=1, nome='Jorge Prioeli', email='jorgeprioelit@gmail.com', senha="123@", acesso_gestor=True)
-
-    deleta_usuario(id=1)
-
-    
-      
+  cria_usuarios(
+    'Devon Murray',
+    senha='123@',
+    email='devon@myspace.com'
+    )
+  
+if __name__ == '__main__':
+  cria_usuarios(
+    'Jerry Smith',
+    senha='123',
+    email='jerry@linkedIn.com'
+    )
