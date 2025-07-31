@@ -1,7 +1,7 @@
 from pathlib import Path
 from datetime import datetime
 import warnings
-
+from streamlit import warning
 from sqlalchemy import create_engine, String, Boolean, Integer, select, ForeignKey
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, Session, relationship
 
@@ -41,15 +41,21 @@ class UsuarioFerias(Base):
 
   def adicionar_ferias(self, inicio_ferias, fim_ferias):
     total_dias = (datetime.strptime(fim_ferias, '%Y-%m-%d') - datetime.strptime(inicio_ferias, '%Y-%m-%d')).days + 1
-    with Session(bind=engine) as session:
-      ferias = EventosFerias(
-        id_pai=self.id,
-        inicio_ferias=inicio_ferias,
-        fim_ferias=fim_ferias,
-        total_dias=total_dias)
-      session.add(ferias)
-      session.commit()
 
+    dias_disponiveis = self.dias_para_solicitar()
+    if total_dias > dias_disponiveis:
+        warning(f"Solicitação excede o limite de {dias_disponiveis} dias disponíveis. Não é possível adicionar essas férias.")
+        return  # ⚠️ Interrompe a função sem adicionar ao banco
+
+    with Session(bind=engine) as session:
+        ferias = EventosFerias(
+            id_pai=self.id,
+            inicio_ferias=inicio_ferias,
+            fim_ferias=fim_ferias,
+            total_dias=total_dias)
+        session.add(ferias)
+        session.commit()
+        
   def deletar_todos_eventos_ferias(self):
       with Session(bind=engine) as session:
           comando_sql = select(EventosFerias).filter_by(id_pai=self.id)

@@ -138,37 +138,43 @@ def pagina_calendario():
     exibir_calendario()
 
 def pagina_principal():
+
     st.title('Bem-vindo ao RH MAX')
     st.divider()
 
     usuario = st.session_state['usuario']
 
+    # Sidebar para gestor
     if usuario.acesso_gestor:
         with st.sidebar:
             st.markdown(f'### 👤 Olá, {usuario.nome}!')
             if st.button('🔒 Sair', use_container_width=True):
                 sair()
-            tab_gestao_usuarios()
+
+            if st.button('Acessar Gestão de Usuários', use_container_width=True):
+                st.session_state['pag_gestao_usuarios'] = True
+                st.rerun()
+
+            if st.button('Acessar Calendário', use_container_width=True):
+                st.session_state['pag_gestao_usuarios'] = False
+                st.rerun()
+
+            # Apenas mostra o CRUD se estiver na página de gestão
+            if st.session_state['pag_gestao_usuarios']:
+                tab_gestao_usuarios()
+
+    # Sidebar para usuários comuns
     else:
         st.markdown(f'### 👤 Olá, {usuario.nome}!')
         if st.button('🔒 Sair'):
             sair()
 
+    # Área principal (fora da sidebar)
     if usuario.acesso_gestor:
-        cols = st.columns(2)
-        with cols[0]:
-            if st.button('Acessar Gestão de Usuários', use_container_width=True):
-                st.session_state['pag_gestao_usuarios'] = True
-                st.rerun()
-        with cols[1]:
-            if st.button('Acessar Calendário', use_container_width=True):
-                st.session_state['pag_gestao_usuarios'] = False
-                st.rerun()
-
         if st.session_state['pag_gestao_usuarios']:
-            pagina_gestao()
+            pagina_gestao()  # mostra usuários com dias de férias
         else:
-            pagina_calendario()
+            pagina_calendario()  # só o calendário
     else:
         pagina_calendario()
 
